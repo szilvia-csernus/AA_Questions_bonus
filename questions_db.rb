@@ -12,24 +12,26 @@ class QuestionsDatabase < SQLite3::Database
     end
 end
 
-class User
-
-    def self.all
-        results = QuestionsDatabase.instance.execute('SELECT * FROM users')
-        results.map { |result| User.new(result)}
+class AAQuestions
+    def self.all(table)
+        results = QuestionsDatabase.instance.execute("SELECT * FROM #{table}")
+        results.map { |result| self.new(result)}
     end
 
-    def self.find_by_id(user_id)
-        results = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+    def self.find_by_id(table, id)
+        results = QuestionsDatabase.instance.execute(<<-SQL, id)
         SELECT 
             * 
         FROM 
-            users
+            #{table}
         WHERE
             id = ?
         SQL
-        results.map { |result| User.new(result)}
+        results.map { |result| self.new(result)}
     end
+end
+
+class User < AAQuestions
 
     def self.find_by_name(first_name, last_name)
         results = QuestionsDatabase.instance.execute(<<-SQL, first_name, last_name)
@@ -126,24 +128,7 @@ class User
 
 end
 
-class Question
-
-    def self.all
-        results = QuestionsDatabase.instance.execute('SELECT * FROM questions')
-        results.map { |result| Question.new(result)}
-    end
-
-    def self.find_by_id(question_id)
-        results = QuestionsDatabase.instance.execute(<<-SQL, question_id)
-        SELECT 
-            * 
-        FROM 
-            questions
-        WHERE
-            id = ?
-        SQL
-        results.map { |result| Question.new(result)}
-    end
+class Question < AAQuestions
 
     def self.find_by_author_id(author_id)
         results = QuestionsDatabase.instance.execute(<<-SQL, author_id)
@@ -225,12 +210,7 @@ class Question
 
 end
 
-class QuestionFollow
-
-    def self.all
-        results = QuestionsDatabase.instance.execute('SELECT * FROM question_follows')
-        results.map { |result| QuestionFollow.new(result)}
-    end
+class QuestionFollow < AAQuestions
 
     def self.find_by_question_id(question_id)
         results = QuestionsDatabase.instance.execute(<<-SQL, question_id)
@@ -322,24 +302,7 @@ class QuestionFollow
 
 end
 
-class Reply
-
-    def self.all
-        results = QuestionsDatabase.instance.execute('SELECT * FROM replies')
-        results.map { |result| Reply.new(result)}
-    end
-
-    def self.find_by_id(reply_id)
-        results = QuestionsDatabase.instance.execute(<<-SQL, reply_id)
-        SELECT 
-            * 
-        FROM 
-            replies
-        WHERE
-            id = ?
-        SQL
-        results.map { |result| Reply.new(result)}
-    end
+class Reply < AAQuestions
 
     def self.find_by_question_id(question_id)
         results = QuestionsDatabase.instance.execute(<<-SQL, question_id)
@@ -434,12 +397,7 @@ class Reply
 
 end
 
-class QuestionLike
-
-    def self.all
-        results = QuestionsDatabase.instance.execute('SELECT * FROM question_likes')
-        results.map { |result| QuestionLike.new(result)}
-    end
+class QuestionLike < AAQuestions
 
     def self.find_by_question_id(question_id)
         results = QuestionsDatabase.instance.execute(<<-SQL, question_id)
