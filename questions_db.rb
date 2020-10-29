@@ -1,5 +1,6 @@
 require 'singleton'
 require 'sqlite3'
+require 'active_support/inflector'
 
 class QuestionsDatabase < SQLite3::Database
     include Singleton
@@ -13,12 +14,14 @@ class QuestionsDatabase < SQLite3::Database
 end
 
 class AAQuestions
-    def self.all(table)
+    def self.all
+        table = self.name.tableize
         results = QuestionsDatabase.instance.execute("SELECT * FROM #{table}")
         results.map { |result| self.new(result)}
     end
 
-    def self.find_by_id(table, id)
+    def self.find_by_id(id)
+        table = self.name.tableize
         results = QuestionsDatabase.instance.execute(<<-SQL, id)
         SELECT 
             * 
@@ -29,6 +32,15 @@ class AAQuestions
         SQL
         results.map { |result| self.new(result)}
     end
+
+    def initialize(hash = {})
+        @id = hash['id']
+    end
+
+    def save
+        self.id.nil? ? create : update
+    end
+
 end
 
 class User < AAQuestions
@@ -95,10 +107,6 @@ class User < AAQuestions
         SQL
         results[0]["avg"]
         
-    end
-
-    def save
-        self.id.nil? ? create : update
     end
 
     def create
@@ -177,10 +185,6 @@ class Question < AAQuestions
 
     def num_likes
         QuestionLike.num_likes_for_question_id(@id)
-    end
-
-    def save
-        self.id.nil? ? create : update
     end
 
     def create
@@ -364,10 +368,6 @@ class Reply < AAQuestions
 
     def child_replies
         Reply.find_by_parent_reply(@id)
-    end
-
-    def save
-        self.id.nil? ? create : update
     end
 
     def create
